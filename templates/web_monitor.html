@@ -1,149 +1,208 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="refresh" content="2">
-  <style>
-    body {
-      background-color: #2E2E2E;
-      color: white;
-      text-align: center;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    
-    h1 {
-      margin-top: 50px;
-    }
-    
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      width: 80%;
-      max-width: 100%;
-    }
-    
-    th, td {
-      border: 1px solid white;
-      padding: 10px;
-      text-align: center;
-      white-space: nowrap;
-    }
-    
-    #header {
-      display: flex;
-      justify-content: space-between;
-      width: 80%;
-      max-width: 100%;
-      margin: 0 auto;
-    }
-    
-    #timeMining {
-      text-align: left;
-    }
-    
-    #version {
-      text-align: right;
-    }
-    
-    #container {
-      text-align: center;
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-      position: relative;
-    }
-    
-    #footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      padding: 10px 0;
-      background-color: #2E2E2E;
-    }
-    
-    #footer a {
-      color: #00FF00;
-      text-decoration: none;
-    }
-    
-    #footer p {
-      color: white;
-      margin: 0;
-    }
-    
-    td {
-      color: green;
-    }
-    
-    @media (max-width: 600px) {
-      th, td {
-        font-size: 12px;
-        padding: 5px;
-      }
-      
-      #header {
-        flex-direction: column;
-        align-items: center;
-      }
-      
-      #timeMining, #version {
-        text-align: center;
-        margin-top: 10px;
-      }
-    }
-  </style>
+    <meta http-equiv="refresh" content="5">
+    <style>
+        body {
+            background-color: #2E2E2E;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 50px 0 0 0; /* Added padding to prevent header overlap */
+        }
+
+        header {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #1E1E1E;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            margin: 5px 0;
+        }
+
+        /* Prevent link color changes */
+        a {
+            color: #00FF00; /* Default link color */
+            text-decoration: none; /* Optional: Remove underline */
+        }
+
+        a:visited {
+            color: #00FF00; /* Keep the same color when visited */
+        }
+
+        a:hover {
+            color: #FFD700; /* Change color on hover (e.g., gold) */
+        }
+
+        a:active {
+            color: #00FF00; /* Keep the same color on active */
+        }
+
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 75%;
+            max-width: 100%;
+        }
+
+        th, td {
+            border: 1px solid white;
+            padding: 5px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        td {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .red-text {
+            color: red;
+        }
+
+        .rssi-excellent {
+            background-color: rgba(0, 255, 0, 0.4);
+            color: #E0E0E0;
+        }
+
+        .rssi-good {
+            background-color: rgba(144, 238, 144, 0.4);
+            color: #333333;
+        }
+
+        .rssi-fair {
+            background-color: rgba(255, 255, 0, 0.4);
+            color: #333333;
+        }
+
+        .rssi-poor {
+            background-color: rgba(255, 165, 0, 0.4);
+            color: #333333;
+        }
+
+        .rssi-very-poor {
+            background-color: rgba(255, 0, 0, 0.4);
+            color: #E0E0E0;
+        }
+
+        .rssi-extremely-poor {
+            background-color: rgba(139, 0, 0, 0.4);
+            color: #E0E0E0;
+        }
+
+        #container {
+            text-align: center;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-top: 100px; /* Prevent overlap with fixed header */
+            margin-bottom: 80px; /* Prevent overlap with fixed footer */
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            background-color: #2E2E2E;
+            color: #D3D3D3;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                width: 100%;
+                font-size: 12px;
+            }
+
+            h1, h2, h4, h5 {
+                font-size: 18px;
+            }
+
+            footer p {
+                font-size: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="container">
+<header>
     <h1>NMController Web Monitor</h1>
-    <div id="header">
-      <div id="timeMining"></div>
-   <!--  <div id="version">Version: CURRENT_VERSION</div> --> 
-    </div>
+    <h2 style="color: #00FF00;">Total Hash rate: {{ totalHash }}</h2>
+</header>
+
+<div id="container">
     <table>
-      <tr>
-        <th>IP</th>
-        <th>BoardType</th>
-        <th>Hash Rate</th>
-        <th>Share(R/A)</th>
-        <th>Net Diff</th>
-        <th>Best Diff</th>
-        <th>Valid</th>
-        <th>Temp(℃)</th>
-        <th>RSSI(dBm)</th>
-        <th>Free Heap(KB)</th>
-        <th>Version</th>
-        <th>Uptime</th>
-        <th>Last Seen</th>
-      </tr>
-      {% for row in result %}
-      <tr>
-        <td>{{ row[0] }}</td>
-        <td>{{ row[1] }}</td>
-        <td>{{ row[2] }}</td>
-        <td>{{ row[3] }}</td>
-        <td>{{ row[4] }}</td>
-        <td>{{ row[5] }}</td>
-        <td>{{ row[6] }}</td>
-        <td>{{ row[7] }}</td>
-        <td>{{ row[8] }}</td>
-        <td>{{ row[9] }}</td>
-        <td>{{ row[10] }}</td>
-        <td>{{ row[11] }}</td>
-        <td>{{ row[12] }}</td>
-      </tr>
-      {% endfor %}
+        <tr>
+            <th>IP</th>
+            <th>Hash Rate<br>(Kh/s)</th>
+            <th>Share(R/A)</th>
+            <th>Best Diff</th>
+            <th>Valid</th>
+            <th>Temp</th>
+            <th>RSSI<br>(dBm)</th>
+            <th>Free<br>Heap</th>
+            <th>Version</th>
+            <th>Uptime</th>
+            <th>Last<br>Seen</th>
+        </tr>
+        {% for row in result %}
+            <tr>
+                <td><a href="http://{{ row[0] }}" target="_blank" rel="noopener noreferrer">{{ row[0] }}</a></td>
+                <td class="{% if row[2] == 0 %}red-text{% endif %}">
+                    {{ row[2] }}
+                </td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[5] }}</td>
+                <td>{{ row[6] }}</td>
+                <td>{{ row[7]|float|round(1) }}℃</td>
+                <td class="
+          {% if row[8] >= -50 %}
+            rssi-excellent
+          {% elif row[8] >= -60 %}
+            rssi-good
+          {% elif row[8] >= -67 %}
+            rssi-fair
+          {% elif row[8] >= -70 %}
+            rssi-poor
+          {% elif row[8] >= -80 %}
+            rssi-very-poor
+          {% else %}
+            rssi-extremely-poor
+          {% endif %}
+        ">
+                    {{ row[8] }}
+                </td>
+                <td>{{ row[9]|float|round(2) }}</td>
+                <td class="{% if row[10].endswith('*') %}red-text{% endif %}">{{ row[10] }}</td>
+                <td>{{ row[11] }}</td>
+                <td>{{ row[12] }}</td>
+            </tr>
+        {% endfor %}
     </table>
-    <div id="footer">
-      <p>&copy; 2024 NMTech Copyright Reserved | <a href="https://github.com/NMminer1024/NMMiner" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <h5 style="color: white;">* Latest firmware version is {{ latest_version }}</h5>
     </div>
-  </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <h4 style="color: #FFD700;">BTC/USD: ${{ "{:,}".format(btc_price) }}<br> Block Reward: {{ block_reward }} BTC
+            (${{ "{:,}".format(reward_value) }})</h4>
+    </div>
+</div>
+
+<footer>
+    <p style="margin: 0;">&copy; 2024 NMTech Copyright Reserved |
+        <a href="https://github.com/NMminer1024/NMMiner" target="_blank" rel="noopener noreferrer"
+           style="color: #00FF00; text-decoration: none;">GitHub</a></p>
+</footer>
 </body>
 </html>

@@ -23,7 +23,7 @@ The NMController will listen the UDP Broadcast in Port: 12345, any devices can b
     "Temp": 48.5,
     "RSSI": -62,
     "FreeHeap": 8203.9,
-    "Uptime": "00d 01:23:46",
+    "Uptime": "000d 01:23:46",
     "Version": "v0.3.01"
 }
 ```
@@ -46,26 +46,26 @@ Install the requirements.
 
 `python nmcontroller.py`
 
-Then the Web NMController will run on your local ip, port 7877. Enter the "http://127.0.0.1:7877" in the browser to access.
+The Web NMController will run on your local ip, port 7877. Enter the "http://127.0.0.1:7877" in the browser to access.
 
 The Web Controller runs like this:
 
-![web_monitor](pic/web_monitor.png)
+![web_monitor](pic/web_monitor2.png)
 
-Thie Page will refresh every 2 seconds.
+The page will refresh every 5 seconds.
 
-Currently, support the infomation :
+Currently, the monitor will display the following information:
  - IP
- - Board type (NMLotto/NMAxe) 
  - HashRate
  - Share info
- - net difficulty
- - best difficulty
- - valid block num
- - device temp(℃)
- - Wifi RSSI(dBm)
- - device free heap (KB)
+ - Net difficulty
+ - Best difficulty
+ - Valid number of blocks mined
+ - Device temp (℃)
+ - Wifi RSSI (dBm)
+ - Device free heap (KB)
  - Uptime
+ - Last seen/updated
 
 ## Contact
 - Anything do not work as your expectation, just let us know.
