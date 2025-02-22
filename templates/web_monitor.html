@@ -221,8 +221,8 @@
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
-        <h4 style="color: #FFD700;">BTC/USD: ${{ "{:,}".format(btc_price) }}<br> Block Reward: {{ block_reward }} BTC
-            (${{ "{:,}".format(reward_value) }})</h4>
+        <h4 style="color: #FFD700;">BTC/USD: ${{ "{:,}".format(btc_price | int) }}<br> Block Reward: {{ block_reward }} BTC
+            (${{ "{:,}".format(reward_value | int) }})</h4>
     </div>
 </div>
 
