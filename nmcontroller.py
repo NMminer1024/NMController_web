@@ -90,7 +90,8 @@ def web_monitor():
         latest_version=latest_version,
         reward_value=btcinfo_thread.block_reward_value,
         block_reward=btcinfo_thread.block_reward,
-        btc_price=btcinfo_thread.btc_price
+        btc_price=btcinfo_thread.btc_price,
+        btc_price_source=btcinfo_thread.btc_price_source,
     )
 
 
