@@ -8,7 +8,7 @@ from threads.managed_thread import ManagedThread
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-class UbpThread(ManagedThread):
+class UdpThread(ManagedThread):
     """
     UDP listener thread for receiving and processing NMMiner data.
 
@@ -17,7 +17,7 @@ class UbpThread(ManagedThread):
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def __init__(self, name="UbpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
+    def __init__(self, name="UdpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
         """
         Initializes the UDP listener thread.
 
@@ -91,6 +91,6 @@ class UbpThread(ManagedThread):
 
 # Usage Example:
 if __name__ == "__main__":
-    udp_thread = UbpThread(port=12345, update_seconds=1)  # Start listening
+    udp_thread = UdpThread(port=12345, update_seconds=1)  # Start listening
     time.sleep(10)  # Let it run for a while
     udp_thread.stop()  # Stop the listener

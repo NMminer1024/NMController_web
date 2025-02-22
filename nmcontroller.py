@@ -18,7 +18,7 @@ import waitress
 from flask import Flask, render_template
 
 from threads.btcinfo_thread import BtcInfoThread
-from threads.udp_thread import UbpThread
+from threads.udp_thread import UdpThread
 from utils import hashrate_formatter, firmware_utils
 from utils.time_format_utils import split_time_string, compact_uptime, time_difference
 
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     # Start monitoring threads
     btcinfo_thread = BtcInfoThread(name="BTC_Info", update_seconds=1800)
-    udp_thread = UbpThread(name="NMMiner_Info")
+    udp_thread = UdpThread(name="NMMiner_Info")
 
     time.sleep(2)  # Allow threads to initialize
 
