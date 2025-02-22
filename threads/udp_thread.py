@@ -28,9 +28,16 @@ class UdpThread(ManagedThread):
         """
         super().__init__(name=name, update_seconds=update_seconds)
 
-        # Create and bind the UDP socket
-        self.sock.bind((ip, port))
-        self.sock.settimeout(5)  # Set a timeout to prevent indefinite blocking
+        # Create the socket, and handle binding errors
+        try:
+            self.sock.bind((ip, port))
+            self.sock.settimeout(5)  # Set a timeout to prevent indefinite blocking
+        except socket.error as e:
+            logging.error(f"[UbpThread] Error binding socket to {ip}:{port}. Error: {e}")
+            raise  # Re-raise the exception to stop the thread from starting
+        except Exception as e:
+            logging.exception(f"[UbpThread] Unexpected error while setting up the socket: {e}")
+            raise
 
         self.nmminer_map = {}  # Dictionary to store miner data
 
