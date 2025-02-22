@@ -2,6 +2,7 @@ import socket
 import json
 import time
 import logging
+import select
 from threads.managed_thread import ManagedThread
 
 # Configure logging for better debugging
@@ -15,7 +16,7 @@ class UdpThread(ManagedThread):
     This class continuously listens for UDP packets, parses JSON data,
     and maintains a mapping of miner statuses.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock = None
 
     def __init__(self, name="UdpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
         """
@@ -28,13 +29,13 @@ class UdpThread(ManagedThread):
         """
         super().__init__(name=name, update_seconds=update_seconds)
 
-        # Create the socket, and handle binding errors
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(5)  # Set timeout for socket operations
         try:
             self.sock.bind((ip, port))
-            self.sock.settimeout(5)  # Set a timeout to prevent indefinite blocking
         except socket.error as e:
             logging.error(f"[UbpThread] Error binding socket to {ip}:{port}. Error: {e}")
-            raise  # Re-raise the exception to stop the thread from starting
+            raise
         except Exception as e:
             logging.exception(f"[UbpThread] Unexpected error while setting up the socket: {e}")
             raise
@@ -61,15 +62,13 @@ class UdpThread(ManagedThread):
             logging.debug("UDP socket has been closed and unable to receive data.")
             return
 
-        try:
+        # Use select to check if the socket has data to read
+        ready = select.select([self.sock], [], [], 0.1)  # Check with a timeout
+        if ready[0]:
             data, _ = self.sock.recvfrom(1024)  # Receive up to 1024 bytes
             self.process_data(data)
-        except socket.timeout:
-            logging.debug("[UbpThread] UDP receive timeout (no data received).")  # Changed to debug
-        except socket.error as e:
-            logging.error(f"[UbpThread] Socket error: {e}", exc_info=True)
-        except Exception as e:
-            logging.exception(f"[UbpThread] Unexpected error: {e}")
+        else:
+            logging.debug("[UbpThread] No data received this cycle.")  # Debug-level message when no data is received
 
     def process_data(self, data):
         """
@@ -91,14 +90,18 @@ class UdpThread(ManagedThread):
 
         except json.JSONDecodeError as e:
             logging.error(f"[UbpThread] Failed to decode JSON: {data}, Error: {e}", exc_info=True)
+        except KeyError as e:
+            logging.error(f"[UbpThread] Missing expected key in JSON data: {e}", exc_info=True)
         except Exception as e:
             logging.exception(f"[UbpThread] Unexpected error in JSON processing: {e}")
 
     def stop(self):
         """Stops the thread and closes the socket."""
         super().stop()  # Gracefully stop the thread
-        self.sock.close()  # Close socket to free the port
-        self.sock = None  # Avoid trying to use this closed socket again
+        if self.sock:
+            self.sock.shutdown(socket.SHUT_RDWR)  # Shutdown socket to ensure no pending operations
+            self.sock.close()  # Close socket to free the port
+            self.sock = None  # Avoid trying to use this closed socket again
 
 
 # Usage Example:
