@@ -24,13 +24,13 @@ class UdpThread(ManagedThread):
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(UdpThread, cls).__new__(cls)
-                cls._instance.initialized = False  # Prevent multiple initializations
+                cls._instance._initialized = False  # Flag to check initialization
         return cls._instance
 
     def __init__(self, name="UbpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
         """Initializes the UDP listener thread."""
-        if self.initialized:
-            return  # Prevent re-initialization
+        if self._initialized:
+            return  # Prevent re-initialization if already initialized
 
         super().__init__(name=name, update_seconds=update_seconds)
 
@@ -43,15 +43,15 @@ class UdpThread(ManagedThread):
 
         try:
             self.sock.bind((ip, port))
-            logging.info(f"[UbpThread] Listening on {ip}:{port}")
+            logging.info(f"{self.get_thread_name()} Listening on {ip}:{port}")
         except socket.error as e:
-            logging.error(f"[UbpThread] Error binding socket to {ip}:{port}. Error: {e}")
+            logging.error(f"{self.get_thread_name()} Error binding socket to {ip}:{port}. Error: {e}")
             raise
         except Exception as e:
-            logging.exception(f"[UbpThread] Unexpected error while setting up the socket: {e}")
+            logging.exception(f"{self.get_thread_name()} Unexpected error while setting up the socket: {e}")
             raise
 
-        self.initialized = True  # Mark as initialized
+        self._initialized = True  # Mark as initialized
 
     def get_miner_map(self):
         """Retrieves the current miner data map."""
@@ -60,7 +60,7 @@ class UdpThread(ManagedThread):
 
     def run(self):
         """Main loop of the thread. Listens for UDP messages and processes data."""
-        logging.info("[UbpThread] Starting UDP listener...")
+        logging.info("{self.get_thread_name()} Starting UDP listener...")
 
         while not self.should_stop():
             try:
@@ -69,12 +69,12 @@ class UdpThread(ManagedThread):
                 else:
                     time.sleep(0.1)  # Prevent excessive CPU usage
             except Exception as e:
-                logging.exception(f"[UbpThread] Unexpected error in run loop: {e}")
+                logging.exception(f"{self.get_thread_name()} Unexpected error in run loop: {e}")
 
     def receive_data(self):
         """Listens for incoming UDP data, parses JSON, and updates nmminer_map."""
         if self.sock is None or self.sock.fileno() == -1:
-            logging.debug("[UbpThread] UDP socket has been closed and unable to receive data.")
+            logging.debug("{self.get_thread_name()} UDP socket has been closed and unable to receive data.")
             return
 
         ready = select.select([self.sock], [], [], 0.1)  # Check with a timeout
@@ -82,7 +82,7 @@ class UdpThread(ManagedThread):
             data, _ = self.sock.recvfrom(1024)  # Receive up to 1024 bytes
             self.process_data(data)
         else:
-            logging.debug("[UbpThread] No data received this cycle.")  # Debug-level message when no data is received
+            logging.debug("{self.get_thread_name()} No data received this cycle.")  # Debug-level message when no data is received
 
     def process_data(self, data):
         """
@@ -95,7 +95,7 @@ class UdpThread(ManagedThread):
             ip = json_data.get("ip")
 
             if not ip:
-                logging.warning(f"[UbpThread] Received JSON without 'ip' field: {json_data}")
+                logging.warning(f"{self.get_thread_name()} Received JSON without 'ip' field: {json_data}")
                 return
 
             json_data["UpdateTime"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -103,12 +103,12 @@ class UdpThread(ManagedThread):
             with self.lock:
                 self.nmminer_map[ip] = json_data  # Store miner data by IP
 
-            logging.debug(f"[UbpThread] Updated miner data for IP: {ip}")
+            logging.debug(f"{self.get_thread_name()} Updated miner data for IP: {ip}")
 
         except json.JSONDecodeError as e:
-            logging.error(f"[UbpThread] Failed to decode JSON: {data}, Error: {e}", exc_info=True)
+            logging.error(f"{self.get_thread_name()} Failed to decode JSON: {data}, Error: {e}", exc_info=True)
         except Exception as e:
-            logging.exception(f"[UbpThread] Unexpected error in JSON processing: {e}")
+            logging.exception(f"{self.get_thread_name()} Unexpected error in JSON processing: {e}")
 
     def stop(self):
         """Stops the thread and closes the socket."""
@@ -116,4 +116,4 @@ class UdpThread(ManagedThread):
         if self.sock:
             self.sock.close()  # Close socket to free the port
             self.sock = None  # Avoid trying to use this closed socket again
-            logging.info("[UbpThread] Socket closed and thread stopped.")
+            logging.info(f"{self.get_thread_name()} Socket closed and thread stopped.")
