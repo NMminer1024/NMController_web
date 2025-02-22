@@ -50,6 +50,10 @@ class UdpThread(ManagedThread):
 
     def receive_data(self):
         """Listens for incoming UDP data, parses JSON, and updates nmminer_map."""
+        if self.sock is None:
+            logging.debug("UDP socket has been closed and unable to receive data.")
+            return
+
         try:
             data, _ = self.sock.recvfrom(1024)  # Receive up to 1024 bytes
             self.process_data(data)
@@ -87,6 +91,7 @@ class UdpThread(ManagedThread):
         """Stops the thread and closes the socket."""
         super().stop()  # Gracefully stop the thread
         self.sock.close()  # Close socket to free the port
+        self.sock = None  # Avoid trying to use this closed socket again
 
 
 # Usage Example:
