@@ -59,6 +59,7 @@ Currently, the monitor will display the following information:
  - HashRate
  - Share info
  - Net difficulty
+ - Last difficulty
  - Best difficulty
  - Valid number of blocks mined
  - Device temp (℃)
@@ -72,5 +73,10 @@ Currently, the monitor will display the following information:
 
 | Email                   |  Telegram                       |
 | :-----------------:     |  :-----------------:            |
-|nmminer1024@gmail.com    |  https://t.me/+IYFC1D0al1E5Yjdl |
+|nmminer1024@gmail.com    |  https://t.me/NMMiner |
 
+## Contributors
+
+Thank you to everyone who has contributed to this project! Special thanks to:
+
+- **dWiGhT** ([dwightmulcahy@gmail.com](mailto:dwightmulcahy@gmail.com)) - Thank you for your valuable contributions and continued support!

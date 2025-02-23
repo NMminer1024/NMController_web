@@ -2,10 +2,12 @@ import requests
 
 
 def compare_versions(version1, version2):
-   def normalize(version):
-      return tuple(map(int, version.lstrip('v').split('.')))
+   return version1 == version2
+   # for solve the test version issue, like "v1.1.03i", the normalize will fail
+   # def normalize(version):
+   #    return tuple(map(int, version.lstrip('v').split('.')))
 
-   return normalize(version1) == normalize(version2)
+   # return normalize(version1) == normalize(version2)
 
 
 def get_latest_version():

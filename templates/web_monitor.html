@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="5">
+    <meta http-equiv="refresh" content="30">
     <style>
         body {
             background-color: #2E2E2E;
@@ -157,6 +157,162 @@
             }
         }
     </style>
+    <script>
+        function parseHashRate(value) {
+            const units = {
+                'TH/s': 1e12,
+                'GH/s': 1e9,
+                'MH/s': 1e6,
+                'KH/s': 1e3,
+                'H/s': 1
+            };
+            const regex = /^([\d.]+)\s*(TH\/s|GH\/s|MH\/s|KH\/s|H\/s)$/;
+            const match = value.match(regex);
+            if (match) {
+                return parseFloat(match[1]) * units[match[2]];
+            }
+            return 0;
+        }
+
+        function parseHash(value) {
+            const units = {
+                'E': 1e18,
+                'P': 1e15,
+                'T': 1e12,
+                'G': 1e9,
+                'M': 1e6,
+                'K': 1e3,
+                '': 1
+            };
+            const regex = /^([\d.]+)\s*(E|P|T|G|M|K|)$/;
+            const match = value.match(regex);
+            if (match) {
+                const hash = parseFloat(match[1]) * units[match[2]];
+                // console.log(hash);
+                return hash;
+            }
+            return 0;
+        }
+
+        function parseShare(value) {
+            const parts = value.split('/');
+            if (parts.length === 2) {
+                return parseInt(parts[1], 10);
+            }
+            return 0;
+        }
+
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("dataTable");
+            switching = true;
+            // Set the sorting direction to ascending:
+            dir = "asc"; 
+            /* Make a loop that will continue until
+            no switching has been done: */
+            while (switching) {
+                // Start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /* Loop through all table rows (except the
+                first, which contains table headers): */
+                for (i = 1; i < (rows.length - 1); i++) {
+                    // Start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /* Get the two elements you want to compare,
+                    one from current row and one from the next: */
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    /* Check if the two rows should switch place,
+                    based on the direction, asc or desc: */
+                    if (dir == "asc") {
+                        if (n == 1)
+                        {
+                          if (parseHashRate(x.innerHTML) > parseHashRate(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if(n == 2)
+                        {
+                          if (parseShare(x.innerHTML) > parseShare(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if(n==3)
+                        {
+                          if (parseHash(x.innerHTML) > parseHash(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if( n == 7)
+                        {
+                          if (parseInt(x.innerHTML) > parseInt(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else {
+                           if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            // If so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                           }
+                        }
+                    } else if (dir == "desc") {
+                        if (n == 1)
+                        {
+                          if (parseHashRate(x.innerHTML) < parseHashRate(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if(n == 2)
+                        {
+                          if (parseShare(x.innerHTML) < parseShare(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if(n == 3)
+                        {
+                          if (parseHash(x.innerHTML) < parseHash(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else if( n == 7)
+                        {
+                          if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        }
+                        else {
+                          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            // If so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                          }
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    // Each time a switch is done, increase this count by 1:
+                    switchcount ++;      
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
 <header>
@@ -165,15 +321,16 @@
 </header>
 
 <div id="container">
-    <table>
+    <table id="dataTable">
         <tr>
-            <th>IP</th>
-            <th>Hash Rate<br>(Kh/s)</th>
-            <th>Share<br>(Reject/Accept)</th>
+            <th onclick="sortTable(0)">IP</th>
+            <th onclick="sortTable(1)">Hash Rate</th>
+            <th onclick="sortTable(2)">Share<br>(Reject/Accept)</th>
+            <th onclick="sortTable(3)">Last Diff</th>
             <th>Best Diff</th>
             <th>Valid</th>
             <th>Temp</th>
-            <th>RSSI<br>(dBm)</th>
+            <th onclick="sortTable(7)">RSSI<br>(dBm)</th>
             <th>Free<br>Heap</th>
             <th>Version</th>
             <th>Uptime</th>
@@ -182,10 +339,10 @@
         {% for row in result %}
             <tr>
                 <td><a href="http://{{ row[0] }}" target="_blank" rel="noopener noreferrer">{{ row[0] }}</a></td>
-                <td class="{% if row[2] == 0 %}red-text{% endif %}">
-                    {{ row[2] }}
-                </td>
+                <!-- <td class="{% if row[2] == 0 %}red-text{% endif %}"> -->
+                <td>{{ row[2] }}</td>
                 <td style="text-align: right;">{{ row[3] }}</td>
+                <td>{{ row[13] }}</td>
                 <td>{{ row[5] }}</td>
                 <td>{{ row[6] }}</td>
                 <td class="{% if row[7] < 30 %}cpu_temp_cold

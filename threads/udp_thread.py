@@ -9,6 +9,7 @@ from threads.managed_thread import ManagedThread
 # Configure logging for better debugging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+
 class UdpThread(ManagedThread):
     """
     Singleton UDP listener thread for receiving and processing NMMiner data.
@@ -27,7 +28,7 @@ class UdpThread(ManagedThread):
                 cls._instance._initialized = False  # Flag to check initialization
         return cls._instance
 
-    def __init__(self, name="UbpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
+    def __init__(self, name="UdpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
         """Initializes the UDP listener thread."""
         if self._initialized:
             return  # Prevent re-initialization if already initialized
@@ -117,3 +118,5 @@ class UdpThread(ManagedThread):
             self.sock.close()  # Close socket to free the port
             self.sock = None  # Avoid trying to use this closed socket again
             logging.info(f"{self.get_thread_name()} Socket closed and thread stopped.")
+
+
