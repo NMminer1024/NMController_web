@@ -18,15 +18,23 @@ class UdpThread(ManagedThread):
     """
     _instance = None
     _lock = threading.Lock()  # Lock to ensure thread safety in instance creation
-    sock = None
+    _initialized = False
 
+    @classmethod
     def __new__(cls, *args, **kwargs):
-        """Ensure only one instance is created."""
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(UdpThread, cls).__new__(cls)
-                cls._instance._initialized = False  # Flag to check initialization
-        return cls._instance
+                cls._instance._initialized = False
+            return cls._instance
+
+    @classmethod
+    def reset_instance(cls):
+        """Resets the singleton instance (for testing purposes)."""
+        with cls._lock:
+            if cls._instance:
+                cls._instance.stop()  # Ensure the thread is stopped
+                cls._instance = None  # Reset instance
 
     def __init__(self, name="UdpThread", ip="0.0.0.0", port=12345, update_seconds=0.5):
         """Initializes the UDP listener thread."""
@@ -43,13 +51,20 @@ class UdpThread(ManagedThread):
         self.sock.settimeout(5)  # Set timeout for socket operations
 
         try:
+            # bind the sock to the address... it only validates the ip format.
             self.sock.bind((ip, port))
+
+            # this will test that the ip addr is valid
+            select.select([self.sock], [], [], 0.1)
+
             logging.info(f"{self.get_thread_name()} Listening on {ip}:{port}")
         except socket.error as e:
+            self.sock.close()  # Ensure cleanup
             logging.error(f"{self.get_thread_name()} Error binding socket to {ip}:{port}. Error: {e}")
             raise
         except Exception as e:
-            logging.exception(f"{self.get_thread_name()} Unexpected error while setting up the socket: {e}")
+            logging.error(f"{self.get_thread_name()} Unexpected error while setting up the socket: {e}")
+            # logging.exception(f"{self.get_thread_name()} Unexpected error while setting up the socket: {e}")
             raise
 
         self._initialized = True  # Mark as initialized
@@ -57,15 +72,15 @@ class UdpThread(ManagedThread):
     def get_miner_map(self):
         """Retrieves the current miner data map."""
         with self.lock:
-            return self.nmminer_map.copy()
+            return dict(self.nmminer_map)
 
     def run(self):
         """Main loop of the thread. Listens for UDP messages and processes data."""
-        logging.info("{self.get_thread_name()} Starting UDP listener...")
+        logging.info(f"{self.get_thread_name()} Starting UDP listener...")
 
         while not self.should_stop():
             try:
-                if self.needs_update():
+                if self._initialized and self.needs_update():
                     self.receive_data()
                 else:
                     time.sleep(0.1)  # Prevent excessive CPU usage
@@ -75,15 +90,17 @@ class UdpThread(ManagedThread):
     def receive_data(self):
         """Listens for incoming UDP data, parses JSON, and updates nmminer_map."""
         if self.sock is None or self.sock.fileno() == -1:
-            logging.debug("{self.get_thread_name()} UDP socket has been closed and unable to receive data.")
+            logging.error(f"{self.get_thread_name()} UDP socket has been closed and unable to receive data.")
             return
 
         ready = select.select([self.sock], [], [], 0.1)  # Check with a timeout
         if ready[0]:
+            logging.debug(f"{self.get_thread_name()} UDP socket ready.")
             data, _ = self.sock.recvfrom(1024)  # Receive up to 1024 bytes
+            logging.debug(f"{self.get_thread_name()} UDP socket received data: {data}")
             self.process_data(data)
         else:
-            logging.debug("{self.get_thread_name()} No data received this cycle.")  # Debug-level message when no data is received
+            logging.debug(f"{self.get_thread_name()} No data received this cycle.")  # Debug-level message when no data is received
 
     def process_data(self, data):
         """
@@ -114,9 +131,8 @@ class UdpThread(ManagedThread):
     def stop(self):
         """Stops the thread and closes the socket."""
         super().stop()  # Gracefully stop the thread
-        if self.sock:
+        if self.sock and self.sock.fileno() != -1:
             self.sock.close()  # Close socket to free the port
             self.sock = None  # Avoid trying to use this closed socket again
             logging.info(f"{self.get_thread_name()} Socket closed and thread stopped.")
-
 
