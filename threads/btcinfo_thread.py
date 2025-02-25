@@ -8,39 +8,41 @@ from threads.managed_thread import ManagedThread
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 LATEST_BLOCK_HEIGHT_URL = "https://blockchain.info/q/getblockcount"
+
+# Ordered most reliable to least reliable based on API stability, regulation, and data accuracy
 BTC_PRICE_API_SOURCES = [
     {
-        "name": "Coingecko",
-        "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
-        "parser": lambda price_data: round(price_data["bitcoin"]["usd"], 2)
-    },
-    {
-        "name": "Kraken",
+        "name": "Kraken",  # Highly regulated, deep liquidity, reliable API
         "url": "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
         "parser": lambda price_data: round(float(price_data["result"]["XXBTZUSD"]["c"][0]), 2)
     },
     {
-        "name": "OKX",
-        "url": "https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT",
-        "parser": lambda price_data: round(float(price_data["data"][0]["last"]), 2)
-    },
-    {
-        "name": "Bitstamp",
+        "name": "Bitstamp",  # One of the oldest and most trusted exchanges
         "url": "https://www.bitstamp.net/api/v2/ticker/btcusd/",
         "parser": lambda price_data: round(float(price_data["last"]), 2)
     },
     {
-        "name": "Huobi",
-        "url": "https://api.huobi.pro/market/detail/merged?symbol=btcusdt",
-        "parser": lambda price_data: round(float(price_data["tick"]["close"]), 2)
+        "name": "Coingecko",  # Reliable price aggregator but depends on third-party sources
+        "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
+        "parser": lambda price_data: round(price_data["bitcoin"]["usd"], 2)
     },
     {
-        "name": "ByBit",
+        "name": "OKX",  # Major exchange, good liquidity, but less regulated
+        "url": "https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT",
+        "parser": lambda price_data: round(float(price_data["data"][0]["last"]), 2)
+    },
+    {
+        "name": "ByBit",  # Popular but less regulated and has had downtime issues
         "url": "https://api.bybit.com/v2/public/tickers?symbol=BTCUSD",
         "parser": lambda price_data: round(float(price_data["result"][0]["last_price"]), 2)
     },
     {
-        "name": "MEXC",
+        "name": "Huobi",  # Used to be a major player, but regulatory concerns remain
+        "url": "https://api.huobi.pro/market/detail/merged?symbol=btcusdt",
+        "parser": lambda price_data: round(float(price_data["tick"]["close"]), 2)
+    },
+    {
+        "name": "MEXC",  # Smallest, least regulated, higher risk of API issues
         "url": "https://api.mexc.com/api/v3/ticker/price?symbol=BTCUSDT",
         "parser": lambda price_data: round(float(price_data["price"]), 2)
     },
@@ -94,21 +96,20 @@ class BtcInfoThread(ManagedThread):
             self.block_reward_value = round(self.block_reward * self.btc_price, 2)
 
         except requests.RequestException as e:
-            logging.error(f"[BtcInfoThread] Error fetching data from blockchain.info: {e}", exc_info=True)
+            logging.error(f"[{self.get_thread_name()}] Error fetching data from blockchain.info: {e}", exc_info=True)
         except ValueError as e:
-            logging.error(f"[BtcInfoThread] Unexpected data format from blockchain.info: {e}", exc_info=True)
+            logging.error(f"[{self.get_thread_name()}] Unexpected data format from blockchain.info: {e}", exc_info=True)
         except Exception as e:
             # Generic exception catch for anything that isn't already caught
-            logging.error(f"[BtcInfoThread] Unexpected error from blockchain.info: {e}", exc_info=True)
+            logging.error(f"[{self.get_thread_name()}] Unexpected error from blockchain.info: {e}", exc_info=True)
 
             # We want to continue on so without this info so zero out what we have
             self.block_reward = 0.0
             self.block_reward_value = 0.00
 
-        logging.info(f"[BtcInfoThread] BTC Price: ${self.btc_price}, Block Reward: {self.block_reward} BTC, Reward Value: ${self.block_reward_value}")
+        logging.info(f"[{self.get_thread_name()}] BTC Price: ${self.btc_price}, Block Reward: {self.block_reward} BTC, Reward Value: ${self.block_reward_value}")
 
-    @staticmethod
-    def get_btc_price():
+    def get_btc_price(self):
         """Fetch BTC price in USD from multiple free crypto APIs."""
 
         for source in BTC_PRICE_API_SOURCES:  # Try one of the free crypto APIs to get the Bitcoin price
@@ -118,10 +119,10 @@ class BtcInfoThread(ManagedThread):
                 data = response.json()
                 return source['name'], source["parser"](data)
             except (requests.RequestException, KeyError, IndexError, ValueError) as e:
-                logging.warning(f"[BtcInfoThread] {source['name']} API failed: {e}")
+                logging.warning(f"[{self.get_thread_name()}] {source['name']} API failed: {e}")
             except Exception as e:
                 # Catch anything else that falls through
-                logging.error(f"[BtcInfoThread] {source['name']} API failed: {e}")
+                logging.error(f"[{self.get_thread_name()}] {source['name']} API failed: {e}")
 
         # Return 0.0 if all APIs fail
         return '', 0.0

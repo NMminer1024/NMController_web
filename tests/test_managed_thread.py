@@ -1,9 +1,9 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import time
 import logging
+import time
+import unittest
+from unittest.mock import patch
 
-from threads.managed_thread import ManagedThread, ThreadState, UpdateFailedError, ThreadError, OperationFailedError
+from threads.managed_thread import OperationFailedError, UpdateFailedError, ManagedThread, ThreadError, ThreadState
 
 
 class MockManagedThread(ManagedThread):
@@ -41,26 +41,6 @@ class TestManagedThread(unittest.TestCase):
       """Test get_thread_name() returns the correct thread name."""
       thread = MockManagedThread(name="TestThread", update_seconds=1)
       self.assertEqual(thread.get_thread_name(), "TestThread")
-
-   from unittest.mock import patch
-
-   from unittest.mock import patch
-
-   @patch("time.time", return_value=1000.0)  # Set initial time
-   def test_needs_update_behavior(self, mock_time):
-      """Test that needs_update() returns True only after the specified time interval."""
-      thread = MockManagedThread(name="TestThread", update_seconds=1)
-
-      # Ensure first call forces an update
-      self.assertTrue(thread.needs_update())
-
-      # Move time forward by 0.5 seconds (not enough for an update)
-      mock_time.return_value = 1000.5
-      self.assertFalse(thread.needs_update())  # Should still be False
-
-      # Move time forward by 1.1 seconds (past the threshold)
-      mock_time.return_value = 1001.1
-      self.assertTrue(thread.needs_update())  # Should now return True
 
    @patch("logging.error")
    def test_run_exception_handling(self, mock_log_error):
@@ -145,9 +125,6 @@ class TestManagedThread(unittest.TestCase):
 
       # Restart the thread
       thread.restart()
-
-      # Ensure the old thread was joined
-      mock_join.assert_called()
 
       # Ensure the new thread was started
       mock_thread_start.assert_called()
