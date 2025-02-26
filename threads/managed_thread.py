@@ -105,6 +105,7 @@ class ManagedThread:
    def needs_update(self):
       current_time = time.time()
       if (current_time - self.last_update) >= self.update_seconds:
+         self.last_update = current_time
          return True
       return False
 
