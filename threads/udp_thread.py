@@ -61,7 +61,7 @@ class UdpThread(ManagedThread):
 
     def run(self):
         """Main loop of the thread. Listens for UDP messages and processes data."""
-        logging.info("{self.get_thread_name()} Starting UDP listener...")
+        logging.info(f"{self.get_thread_name()} Starting UDP listener...")
 
         while not self.should_stop():
             try:
@@ -75,7 +75,7 @@ class UdpThread(ManagedThread):
     def receive_data(self):
         """Listens for incoming UDP data, parses JSON, and updates nmminer_map."""
         if self.sock is None or self.sock.fileno() == -1:
-            logging.debug("{self.get_thread_name()} UDP socket has been closed and unable to receive data.")
+            logging.debug(f"{self.get_thread_name()} UDP socket has been closed and unable to receive data.")
             return
 
         ready = select.select([self.sock], [], [], 0.1)  # Check with a timeout
@@ -83,7 +83,7 @@ class UdpThread(ManagedThread):
             data, _ = self.sock.recvfrom(1024)  # Receive up to 1024 bytes
             self.process_data(data)
         else:
-            logging.debug("{self.get_thread_name()} No data received this cycle.")  # Debug-level message when no data is received
+            logging.debug(f"{self.get_thread_name()} No data received this cycle.")  # Debug-level message when no data is received
 
     def process_data(self, data):
         """
@@ -117,7 +117,7 @@ class UdpThread(ManagedThread):
         if self.sock:
             self.sock.close()  # Close socket to free the port
             self.sock = None  # Avoid trying to use this closed socket again
-            logging.info("{self.get_thread_name()} Socket closed and thread stopped.")
+            logging.info(f"{self.get_thread_name()} Socket closed and thread stopped.")
 
 
 # Usage Example:
