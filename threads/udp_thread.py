@@ -127,6 +127,5 @@ if __name__ == "__main__":
 
     print(f"Both instances are the same: {udp_thread_1 is udp_thread_2}")  # Should print True
 
-
     time.sleep(10)  # Let it run for a while
     udp_thread_1.stop()  # Stop the listener
