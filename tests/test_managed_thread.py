@@ -5,9 +5,14 @@ from unittest.mock import patch
 
 from threads.managed_thread import OperationFailedError, UpdateFailedError, ManagedThread, ThreadError, ThreadState
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 class MockManagedThread(ManagedThread):
    """A mock subclass of ManagedThread for testing purposes."""
+
+   # Set the logging level for the managed class
+   managed_thread_logger = logging.getLogger('threads.managed_thread')
+   managed_thread_logger.setLevel(logging.DEBUG)
 
    def run(self):
       """Override the run method to simulate behavior."""

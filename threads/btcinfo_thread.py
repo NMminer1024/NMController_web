@@ -133,9 +133,3 @@ class BtcInfoThread(ManagedThread):
             if self.should_stop():
                 break
             time.sleep(1)
-
-
-if __name__ == "__main__":
-    btc_thread = BtcInfoThread(update_seconds=1)  # Start listening
-    time.sleep(10)  # Let it run for a while
-    btc_thread.stop()  # Stop the listener
