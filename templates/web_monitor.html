@@ -389,7 +389,6 @@
         {% for row in result %}
             <tr>
                 <td><a href="http://{{ row[0] }}" target="_blank" rel="noopener noreferrer">{{ row[0] }}</a></td>
-                <!-- <td class="{% if row[2] == 0 %}red-text{% endif %}"> -->
                 <td>{{ row[2] }}</td>
                 <td style="text-align: right;">{{ row[3] }}</td>
                 <td>{{ row[13] }}</td>
@@ -401,7 +400,7 @@
                            {% elif 70 <= row[7] <= 80 %}cpu_temp_warning
                            {% elif row[7] > 80 %}cpu_temp_dangerous
                            {% else %}cpu_temp_unknown{% endif %}">
-                    {{ row[7]|float|round(1) }}℃
+                    {{'%0.1f'| format(row[7]|float)}}℃
                 </td>
                 <td class="
                   {% if row[8] >= -50 %}
@@ -420,7 +419,7 @@
                 ">
                     {{ row[8] }}
                 </td>
-                <td>{{ row[9]|float|round(2) }}</td>
+                <td>{{'%0.2f'| format(row[9]|float)}}</td>
                 <td class="{% if row[10].endswith('*') %}red-text{% endif %}">{{ row[10] }}</td>
                 <td>{{ row[11] }}</td>
                 <td>{{ row[12] }}</td>
