@@ -141,4 +141,3 @@ class ManagedThread:
             logger.error(f"[{self.get_thread_name()}] Error during operation: {e}. Retrying... ({attempt}/{retries})")
             time.sleep(timeout)
       raise ThreadError(f"Operation failed after {retries} retries.")
-   
