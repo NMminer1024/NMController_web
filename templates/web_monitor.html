@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta http-equiv="refresh" content="30">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background-color: #2E2E2E;
@@ -61,26 +62,49 @@
 
         td {
             color: rgba(255, 255, 255, 0.7);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        /* Hover Effects */
+        td:hover {
+            transform: scale(1.05); /* Slightly enlarge on hover */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+
+        /* CPU Temp styles */
+
+        /* Warning Pulse Animation */
+        @keyframes pulse {
+            0% {
+                background-color: red;
+            }
+            100% {
+                background-color: lightcoral;
+            }
         }
 
         .cpu_temp_cold {
-            color: mediumturquoise;
-            font-weight: bold;
+            color: deepskyblue;
         }
 
         .cpu_temp_idle {
             color: green;
-            font-weight: bold;
         }
 
         .cpu_temp_under-load {
-            color: orange;
-            font-weight: bold;
+            color: gold;
+        }
+
+        .cpu_temp_warning {
+            background-color: orange;
+            color: black;
         }
 
         .cpu_temp_dangerous {
-            color: red;
-            font-weight: bold;
+            background-color: red;
+            color: white;
+            animation: pulse 1.5s infinite alternate ease-in-out;
         }
 
         .cpu_temp_unknown {
@@ -91,6 +115,8 @@
         .red-text {
             color: red;
         }
+
+        /* RSSI dBm quality styles */
 
         .rssi-excellent {
             background-color: rgba(0, 255, 0, 0.4);
@@ -158,6 +184,45 @@
         }
     </style>
     <script>
+        /* Add a warning/error alert for miner temps */
+        document.addEventListener("DOMContentLoaded", function () {
+            const tempCells = document.querySelectorAll("td.cpu_temp_cold, td.cpu_temp_idle, td.cpu_temp_under-load, td.cpu_temp_warning, td.cpu_temp_dangerous");
+
+            tempCells.forEach(cell => {
+                let temp = parseFloat(cell.innerText);
+
+                if (temp >= 65 && temp <= 70) {
+                    Swal.fire({
+                        title: "⚠️ High CPU Temperature",
+                        text: `Your CPU temperature is at ${temp}°C. Please monitor your system.`,
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        timer: 5000
+                    });
+                } else if (temp > 70 && temp <= 80) {
+                    Swal.fire({
+                        title: "🚨 Critical CPU Temperature!",
+                        text: `Your CPU temperature is dangerously high at ${temp}°C! Immediate action required.`,
+                        icon: "error",
+                        confirmButtonText: "Understood",
+                        showCancelButton: true,
+                        cancelButtonText: "Ignore",
+                        timer: 8000
+                    });
+                } else if (temp > 80) {
+                    Swal.fire({
+                        title: "🔥 Overheating Warning!",
+                        text: `Your CPU temperature is extremely high at ${temp}°C! The device may be at risk of damage.`,
+                        icon: "error",
+                        confirmButtonText: "Shut down system",
+                        showCancelButton: true,
+                        cancelButtonText: "Ignore",
+                        timer: 8000
+                    });
+                }
+            });
+        });
+
         function parseHashRate(value) {
             const units = {
                 'TH/s': 1e12,
@@ -226,76 +291,60 @@
                     /* Check if the two rows should switch place,
                     based on the direction, asc or desc: */
                     if (dir == "asc") {
-                        if (n == 1)
-                        {
-                          if (parseHashRate(x.innerHTML) > parseHashRate(y.innerHTML)) {
+                        if (n == 1) {
+                            if (parseHashRate(x.innerHTML) > parseHashRate(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if(n == 2)
-                        {
-                          if (parseShare(x.innerHTML) > parseShare(y.innerHTML)) {
+                        } else if (n == 2) {
+                            if (parseShare(x.innerHTML) > parseShare(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if(n==3)
-                        {
-                          if (parseHash(x.innerHTML) > parseHash(y.innerHTML)) {
+                        } else if (n == 3) {
+                            if (parseHash(x.innerHTML) > parseHash(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if( n == 7)
-                        {
-                          if (parseInt(x.innerHTML) > parseInt(y.innerHTML)) {
+                        } else if (n == 7) {
+                            if (parseInt(x.innerHTML) > parseInt(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else {
-                           if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                            // If so, mark as a switch and break the loop:
-                            shouldSwitch = true;
-                            break;
-                           }
+                        } else {
+                            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                                // If so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
                         }
                     } else if (dir == "desc") {
-                        if (n == 1)
-                        {
-                          if (parseHashRate(x.innerHTML) < parseHashRate(y.innerHTML)) {
+                        if (n == 1) {
+                            if (parseHashRate(x.innerHTML) < parseHashRate(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if(n == 2)
-                        {
-                          if (parseShare(x.innerHTML) < parseShare(y.innerHTML)) {
+                        } else if (n == 2) {
+                            if (parseShare(x.innerHTML) < parseShare(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if(n == 3)
-                        {
-                          if (parseHash(x.innerHTML) < parseHash(y.innerHTML)) {
+                        } else if (n == 3) {
+                            if (parseHash(x.innerHTML) < parseHash(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else if( n == 7)
-                        {
-                          if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+                        } else if (n == 7) {
+                            if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
                                 shouldSwitch = true;
                                 break;
                             }
-                        }
-                        else {
-                          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                            // If so, mark as a switch and break the loop:
-                            shouldSwitch = true;
-                            break;
-                          }
+                        } else {
+                            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                                // If so, mark as a switch and break the loop:
+                                shouldSwitch = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -303,7 +352,7 @@
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                     switching = true;
                     // Each time a switch is done, increase this count by 1:
-                    switchcount ++;      
+                    switchcount++;
                 } else {
                     if (switchcount == 0 && dir == "asc") {
                         dir = "desc";
@@ -347,7 +396,8 @@
                 <td>{{ row[6] }}</td>
                 <td class="{% if row[7] < 30 %}cpu_temp_cold
                            {% elif 30 <= row[7] <= 45 %}cpu_temp_idle
-                           {% elif 50 <= row[7] <= 70 %}cpu_temp_under-load
+                           {% elif 45 <= row[7] <= 70 %}cpu_temp_under-load
+                           {% elif 70 <= row[7] <= 80 %}cpu_temp_warning
                            {% elif row[7] > 80 %}cpu_temp_dangerous
                            {% else %}cpu_temp_unknown{% endif %}">
                     {{ row[7]|float|round(1) }}℃
@@ -384,7 +434,8 @@
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
-        <h4 style="color: #FFD700;">{{ btc_price_source }} BTC/USD: ${{ "{:,}".format(btc_price) }}<br> Block Reward: {{ block_reward }} BTC
+        <h4 style="color: #FFD700;">{{ btc_price_source }} BTC/USD: ${{ "{:,}".format(btc_price) }}<br> Block
+            Reward: {{ block_reward }} BTC
             (${{ "{:,}".format(reward_value) }})</h4>
     </div>
 </div>

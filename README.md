@@ -79,4 +79,4 @@ Currently, the monitor will display the following information:
 
 Thank you to everyone who has contributed to this project! Special thanks to:
 
-- **dWiGhT** ([dwightmulcahy@gmail.com](mailto:dwightmulcahy@gmail.com)) - Thank you for your valuable contributions and continued support!
+- **dWiGhT** (https://github.com/dwightmulcahy) - Thank you for your valuable contributions and continued support!
