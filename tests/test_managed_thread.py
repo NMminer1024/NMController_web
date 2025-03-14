@@ -7,6 +7,7 @@ from threads.managed_thread import OperationFailedError, UpdateFailedError, Mana
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+
 class MockManagedThread(ManagedThread):
    """A mock subclass of ManagedThread for testing purposes."""
 
@@ -47,19 +48,18 @@ class TestManagedThread(unittest.TestCase):
       thread = MockManagedThread(name="TestThread", update_seconds=1)
       self.assertEqual(thread.get_thread_name(), "TestThread")
 
-   @patch("logging.error")
-   def test_run_exception_handling(self, mock_log_error):
+   def test_run_exception_handling(self):
       """Test that run() correctly logs an error when an exception occurs."""
 
       class FailingThread(MockManagedThread):
          def run(self):
+            logging.info(f"[{self.get_thread_name()}] FailingThread run() called.")
             raise RuntimeError("Test exception")
 
-      thread = FailingThread(name="FailingThread", update_seconds=1)
-
-      mock_log_error.assert_called_once_with(
-         "[FailingThread] Thread encountered an error: Test exception", exc_info=True
-      )
+      with self.assertLogs(level="ERROR") as log:
+         thread = FailingThread(name="FailingThread", update_seconds=0.1)
+         time.sleep(1)
+      self.assertIn("[FailingThread] Thread encountered an error: Test exception", log.output[0])
 
    def test_should_stop(self):
       """Test that should_stop() returns True after stopping the thread."""
@@ -67,12 +67,14 @@ class TestManagedThread(unittest.TestCase):
       self.assertFalse(thread.should_stop())  # Initially, it should be False
       thread.stop()
       self.assertTrue(thread.should_stop())  # After stopping, it should be True
+      self.assertEqual(thread.get_state(), ThreadState.STOPPED)
 
    @patch("threading.Thread.join", return_value=None)  # Mock join to prevent blocking
    def test_stop_while_paused(self, mock_join):
       """Test that a thread can be stopped while paused."""
       thread = MockManagedThread(name="TestThread", update_seconds=1)
       thread.pause()
+      self.assertEqual(thread.get_state(), ThreadState.PAUSED)
       thread.stop()
       self.assertEqual(thread.get_state(), ThreadState.STOPPED)
 
@@ -81,10 +83,14 @@ class TestManagedThread(unittest.TestCase):
       thread = MockManagedThread(name="TestThread", update_seconds=1)
       thread.pause()
       self.assertTrue(thread.is_paused())
+      self.assertEqual(thread.get_state(), ThreadState.PAUSED)
       thread.pause()  # Call pause again
       self.assertTrue(thread.is_paused())  # Still paused
+      self.assertEqual(thread.get_state(), ThreadState.PAUSED)
       thread.resume()
       self.assertFalse(thread.is_paused())  # Should resume correctly
+      self.assertEqual(thread.get_state(), ThreadState.RUNNING)
+
 
    @patch("threading.Thread.start")
    def test_restart_while_paused(self, mock_thread_start):
@@ -113,10 +119,14 @@ class TestManagedThread(unittest.TestCase):
       """Test resuming multiple times doesn't cause issues."""
       thread = MockManagedThread(name="TestThread", update_seconds=1)
       thread.pause()
+      self.assertEqual(thread.get_state(), ThreadState.PAUSED)
       thread.resume()
       self.assertFalse(thread.is_paused())
+      self.assertEqual(thread.get_state(), ThreadState.RUNNING)
       thread.resume()  # Call resume again
       self.assertFalse(thread.is_paused())  # Still running
+      self.assertEqual(thread.get_state(), ThreadState.RUNNING)
+
 
    @patch("time.sleep", return_value=None)  # Mock sleep to prevent actual waiting
    @patch("threading.Thread.start")
@@ -128,7 +138,6 @@ class TestManagedThread(unittest.TestCase):
       # Ensure initial state
       self.assertEqual(thread.get_state(), ThreadState.RUNNING)
 
-      # Restart the thread
       thread.restart()
 
       # Ensure the new thread was started
@@ -147,6 +156,40 @@ class TestManagedThread(unittest.TestCase):
       # Ensure the stop event was set and the thread is stopped
       self.assertTrue(thread.should_stop())
       self.assertEqual(thread.get_state(), ThreadState.STOPPED)
+
+   def test_stop_before_start(self):
+      """Test stopping a thread before it starts."""
+      thread = MockManagedThread(name="TestThread", update_seconds=1)
+      thread.stop()
+      self.assertEqual(thread.get_state(), ThreadState.STOPPED)
+      self.assertTrue(thread.should_stop())
+
+   def test_pause_before_start(self):
+      """Test pausing a thread before it starts."""
+      thread = MockManagedThread(name="TestThread", update_seconds=1)
+      thread.pause()
+      self.assertEqual(thread.get_state(), ThreadState.PAUSED)
+      self.assertTrue(thread.is_paused())
+
+   def test_resume_before_start(self):
+      """Test resuming a thread before it starts."""
+      thread = MockManagedThread(name="TestThread", update_seconds=1)
+      thread.resume()  # Should not cause an issue
+      self.assertEqual(thread.get_state(), ThreadState.RUNNING)
+
+   def test_multiple_pauses_and_resumes(self):
+      """Test multiple calls to pause and resume to ensure idempotency."""
+      thread = MockManagedThread(name="TestThread", update_seconds=1)
+
+      thread.pause()
+      self.assertTrue(thread.is_paused())
+      thread.pause()  # Calling again should not break anything
+      self.assertTrue(thread.is_paused())
+
+      thread.resume()
+      self.assertFalse(thread.is_paused())
+      thread.resume()  # Calling again should not break anything
+      self.assertFalse(thread.is_paused())
 
    @patch("time.sleep", return_value=None)  # Mock sleep to prevent actual waiting
    def test_retry_operation_partial_success(self, mock_sleep):
