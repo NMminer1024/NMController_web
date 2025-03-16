@@ -24,7 +24,7 @@ class OperationFailedError(ThreadError):
 
 
 class ThreadState(Enum):
-   INITIALING = "initialing"
+   INITIALIZING = "initializing"
    STOPPED = "stopped"
    RUNNING = "running"
    PAUSED = "paused"
@@ -36,7 +36,7 @@ class ManagedThread:
 
    def __init__(self, name="ManagedThread", update_seconds=0, max_retries=3, retry_delay=1, stop_timeout=5):
       self._state_lock = threading.Lock()
-      with self._state_lock: self._state = ThreadState.INITIALING
+      with self._state_lock: self._state = ThreadState.INITIALIZING
       self.last_update = time.time() - update_seconds - 1  # Forces an immediate update
       self.update_seconds = update_seconds
       self._stop_event = threading.Event()
@@ -46,8 +46,8 @@ class ManagedThread:
       self.retry_delay = retry_delay
       self.stop_timeout = stop_timeout
       self.thread = threading.Thread(target=self._run_wrapper, name=name, daemon=True)
-      self._set_state(ThreadState.RUNNING)
       self.thread.start()
+      self._set_state(ThreadState.PAUSED)
 
       logger.debug(f"[{self.get_thread_name()}] Init'd")
 
@@ -61,6 +61,10 @@ class ManagedThread:
          return self._state
 
    def _run_wrapper(self):
+      while self.get_state() == ThreadState.INITIALIZING:
+         logger.info("...Waiting for initialization to finish")
+         time.sleep(0.1)
+
       try:
          self.run()
       except Exception as e:
