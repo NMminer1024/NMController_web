@@ -1,3 +1,4 @@
+import logging
 import unittest
 from unittest.mock import patch, MagicMock
 import time
@@ -5,8 +6,13 @@ import time
 from threads.btcinfo_thread import BtcInfoThread, BTC_PRICE_API_SOURCES
 from threads.managed_thread import ThreadState
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 
 class TestBtcInfoThread(unittest.TestCase):
+    # Set the logging level for the managed class
+    managed_thread_logger = logging.getLogger('threads.managed_thread')
+    managed_thread_logger.setLevel(logging.DEBUG)
 
     @classmethod
     def setUpClass(cls):
